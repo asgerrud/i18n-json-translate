@@ -1,5 +1,6 @@
 import json, re, os, sys
 from deep_translator import GoogleTranslator
+import logging
 
 INTERPOLATION_VARIABLE_PATTERN = r"(?<=\{\{)[^\{\}]*(?=\}\})"
 DEFAULT_LANGUAGE = "en"
@@ -7,7 +8,7 @@ DEFAULT_DIR = ""
 
 
 def exit_with_error(message):
-    print(message)
+    logging.error(message)
     exit(1)
 
 
@@ -33,9 +34,10 @@ def get_file_json(lang_code):
             exit_with_error(
                 f"ERROR: Could not decode from language json file: {lang_code}.json"
             )
-        print(
-            f"Could not decode json file: {get_file_name(lang_code)}. Creating empty object"
-        )
+        else:
+            logging.error(
+                f"Could not decode json file: {get_file_name(lang_code)}. Creating empty object"
+            )
         return {}
 
 
@@ -50,7 +52,7 @@ def save_file(lang_code, data):
     with open(file, "w", encoding="utf-8") as output_file:
         output_file.write(data)
         output_file.write("\n")
-    print(f"Translated {file_name}")
+    logging.info(f"Translated {file_name}")
 
 
 def extract_language_codes_from_files(dir):
@@ -147,6 +149,8 @@ if __name__ == "__main__":
         dir = args[1].strip()
     if len(args) > 2:
         from_language = args[2].strip()
+
+    logging.basicConfig(level=logging.DEBUG, format="%(message)s")
 
     translation_dir = get_directory(dir)
     translate_files_in_dir(translation_dir)
