@@ -50,7 +50,6 @@ def save_file(lang_code, data):
     with open(file, "w", encoding="utf-8") as output_file:
         output_file.write(data)
         output_file.write("\n")
-        output_file.close()
     print(f"Translated {file_name}")
 
 
