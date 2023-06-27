@@ -13,7 +13,7 @@ pip install –r requirements.txt
 Run the script
 
 ```bash
-$ python3 translate.py [directory] [from_language]
+python3 translate.py [directory] [from_language]
 ```
 
 `directory` specifies directory containing the json files (default = `./` )  
@@ -43,6 +43,6 @@ command_name=$I18N_JSON_TRANSLATE"translator.py"
 
 Run the command
 ```bash
-$ translator.py [directory] [from_language]
+translator.py [directory] [from_language]
 ```
 
