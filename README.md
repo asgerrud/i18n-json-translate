@@ -13,7 +13,7 @@ pip install –r requirements.txt
 Run the script
 
 ```bash
-python3 translate.py [directory] [from_language]
+python3 translator.py [directory] [from_language]
 ```
 
 `directory` specifies directory containing the json files (default = `./` )  
