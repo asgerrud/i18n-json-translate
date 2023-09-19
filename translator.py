@@ -134,8 +134,7 @@ def translate_file(language_code, index, files_total):
                     loading_bar.next()
 
     file_name = get_file_name(language_code)
-
-    with Bar(f"({index}/{files_total}) {file_name}", fill="#", suffix='%(percent)d%%', max=keys_total) as loading_bar:
+    with Bar(f"({index}/{files_total}) {file_name}", suffix='%(percent)d%%', max=keys_total) as loading_bar:
         translate_object(existing_translation, final_translation)
 
     translated_json = json.dumps(final_translation, indent=4, ensure_ascii=False)
@@ -146,7 +145,7 @@ def translate_files_in_dir(dir):
     language_codes = extract_language_codes_from_files(dir)
     languages_total = len(language_codes) - 1 # Number of langages to translate (minus source language)
 
-    print(f"Found {languages_total} language files to translate in directory")
+    print(f"Found {languages_total} language files to translate in directory:")
 
     if from_language not in language_codes:
         exit_with_error(f"ERROR: Missing source language file: {from_language}.json")
@@ -155,7 +154,7 @@ def translate_files_in_dir(dir):
         if language_code != from_language:
             translation = translate_file(language_code, index, languages_total)
             save_file(translation, language_code)
-
+    print("Translation complete!")
 
 if __name__ == "__main__":
     args = sys.argv
