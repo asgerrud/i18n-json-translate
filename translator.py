@@ -15,26 +15,26 @@ def get_directory(directory=""):
     return os.path.join(os.getcwd(), directory)
 
 
-def get_file_name(lang_code):
-    return f"{lang_code}.json"
+def get_file_name(language_code):
+    return f"{language_code}.json"
 
 
-def get_file_path(dir, lang_code):
-    return os.path.join(get_directory(dir), get_file_name(lang_code))
+def get_file_path(dir, language_code):
+    return os.path.join(get_directory(dir), get_file_name(language_code))
 
 
-def get_file_json(lang_code):
+def get_file_json(language_code):
     try:
         return json.load(
-            open(get_file_path(translation_dir, lang_code), encoding="utf-8")
+            open(get_file_path(translation_dir, language_code), encoding="utf-8")
         )
     except json.JSONDecodeError:
-        if lang_code == from_language:
+        if language_code == from_language:
             exit_with_error(
-                f"ERROR: Could not decode from language json file: {lang_code}.json"
+                f"ERROR: Could not decode from language json file: {language_code}.json"
             )
         print(
-            f"Could not decode json file: {get_file_name(lang_code)}. Creating empty object"
+            f"Could not decode json file: {get_file_name(language_code)}. Creating empty object"
         )
         return {}
 
@@ -44,9 +44,9 @@ def get_json_skeleton():
     return get_file_json(from_language)
 
 
-def save_file(lang_code, data):
-    file_name = get_file_name(lang_code)
-    file = get_file_path(translation_dir, lang_code)
+def save_file(data, language_code):
+    file_name = get_file_name(language_code)
+    file = get_file_path(translation_dir, language_code)
     with open(file, "w", encoding="utf-8") as output_file:
         output_file.write(data)
         output_file.write("\n")
@@ -71,16 +71,19 @@ def extract_language_codes_from_files(dir):
     return language_codes
 
 
-def translate(value, language):
+def translate_string(text, language_code):
     """Translates the string"""
-    return GoogleTranslator(source=from_language, target=language).translate(value)
+    if language_code == "sr":
+        language_code = "hr"
+
+    return GoogleTranslator(source=from_language, target=language_code).translate(text)
 
 
-def translate_interpolated_string(val, language):
+def translate_interpolated_string(text, language_code):
     """Translates the string in the specified language, whilst maintaining the original interpolated variable names"""
-    interpolated_vars = re.findall(INTERPOLATION_VARIABLE_PATTERN, val)
-    interpolation_masked = re.sub(INTERPOLATION_VARIABLE_PATTERN, " ###### ", val)
-    translation = translate(interpolation_masked, language)
+    interpolated_vars = re.findall(INTERPOLATION_VARIABLE_PATTERN, text)
+    interpolation_masked = re.sub(INTERPOLATION_VARIABLE_PATTERN, " ###### ", text)
+    translation = translate_string(interpolation_masked, language_code)
 
     for interpolation in interpolated_vars:
         translation = translation.replace(" ###### ", interpolation, 1)
@@ -88,16 +91,16 @@ def translate_interpolated_string(val, language):
     return translation
 
 
-def translate_string(language, val):
+def translate(text, language_code):
     """Translates the string in the specified language"""
-    if "{{" in val:
-        return translate_interpolated_string(val, language)
+    if "{{" in text:
+        return translate_interpolated_string(text, language_code)
     else:
-        return translate(val, language)
+        return translate_string(text, language_code)
 
 
-def translate_file(language):
-    existing_translation = get_file_json(language)
+def translate_file(language_code):
+    existing_translation = get_file_json(language_code)
     final_translation = get_json_skeleton()
 
     def translate_object(source, target):
@@ -118,11 +121,11 @@ def translate_file(language):
                 if isinstance(val_s, str):
                     target[key] = val_s
                 else:
-                    target[key] = translate_string(language, val_t)
+                    target[key] = translate(val_t, language_code)
 
     translate_object(existing_translation, final_translation)
 
-    translated_json = json.dumps(final_translation, indent=2, ensure_ascii=False)
+    translated_json = json.dumps(final_translation, indent=4, ensure_ascii=False)
     return translated_json
 
 
@@ -132,10 +135,10 @@ def translate_files_in_dir(dir):
     if from_language not in language_codes:
         exit_with_error(f"ERROR: Missing source language file: {from_language}.json")
 
-    for lang_code in language_codes:
-        if lang_code != from_language:
-            translation = translate_file(lang_code)
-            save_file(lang_code, translation)
+    for language_code in language_codes:
+        if language_code != from_language:
+            translation = translate_file(language_code)
+            save_file(translation, language_code)
 
 
 if __name__ == "__main__":
