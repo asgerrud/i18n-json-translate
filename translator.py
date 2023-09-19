@@ -1,5 +1,6 @@
 import json, re, os, sys
 from deep_translator import GoogleTranslator
+from progress.bar import Bar
 
 INTERPOLATION_VARIABLE_PATTERN = r"(?<=\{\{)[^\{\}]*(?=\}\})"
 DEFAULT_LANGUAGE = "en"
@@ -43,15 +44,20 @@ def get_json_skeleton():
     """Returns the skeleton of the "from language" json file"""
     return get_file_json(from_language)
 
+def get_keys_total(json_object, count):
+    for k, v in json_object.items():
+        if isinstance(v, dict):
+            return get_keys_total(v, count)
+        else:
+            count += 1
+    return count
 
 def save_file(data, language_code):
-    file_name = get_file_name(language_code)
     file = get_file_path(translation_dir, language_code)
     with open(file, "w", encoding="utf-8") as output_file:
         output_file.write(data)
         output_file.write("\n")
         output_file.close()
-    print(f"Translated {file_name}")
 
 
 def extract_language_codes_from_files(dir):
@@ -99,9 +105,11 @@ def translate(text, language_code):
         return translate_string(text, language_code)
 
 
-def translate_file(language_code):
+def translate_file(language_code, index, files_total):
     existing_translation = get_file_json(language_code)
     final_translation = get_json_skeleton()
+
+    keys_total = get_keys_total(final_translation, 0)
 
     def translate_object(source, target):
         """
@@ -120,10 +128,15 @@ def translate_file(language_code):
             elif isinstance(val_t, str):
                 if isinstance(val_s, str):
                     target[key] = val_s
+                    loading_bar.next()
                 else:
                     target[key] = translate(val_t, language_code)
+                    loading_bar.next()
 
-    translate_object(existing_translation, final_translation)
+    file_name = get_file_name(language_code)
+
+    with Bar(f"({index}/{files_total}) {file_name}", fill="#", suffix='%(percent)d%%', max=keys_total) as loading_bar:
+        translate_object(existing_translation, final_translation)
 
     translated_json = json.dumps(final_translation, indent=4, ensure_ascii=False)
     return translated_json
@@ -131,13 +144,16 @@ def translate_file(language_code):
 
 def translate_files_in_dir(dir):
     language_codes = extract_language_codes_from_files(dir)
+    languages_total = len(language_codes) - 1 # Number of langages to translate (minus source language)
+
+    print(f"Found {languages_total} language files to translate in directory")
 
     if from_language not in language_codes:
         exit_with_error(f"ERROR: Missing source language file: {from_language}.json")
 
-    for language_code in language_codes:
+    for index, language_code in enumerate(language_codes):
         if language_code != from_language:
-            translation = translate_file(language_code)
+            translation = translate_file(language_code, index, languages_total)
             save_file(translation, language_code)
 
 
