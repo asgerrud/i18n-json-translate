@@ -24,7 +24,11 @@ python3 translator.py [directory] [from_language]
 ##  Run anywhere from terminal
 
 (Optional) Find your python executable path, using `which python3`  
-Replace the path on `line 1` in `translator.py` with the path outputted by the command
+Add a shebang line in the beginning of the `translator.py` file with the path outputted by the command. Example:
+```
+#!/usr/bin/python3
+```
+
 
 Add execute permission to file:
 ```
