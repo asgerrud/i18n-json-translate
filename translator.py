@@ -44,13 +44,16 @@ def get_json_skeleton():
     """Returns the skeleton of the "from language" json file"""
     return get_file_json(from_language)
 
-def get_keys_total(json_object, count):
-    for k, v in json_object.items():
-        if isinstance(v, dict):
-            return get_keys_total(v, count)
-        else:
-            count += 1
-    return count
+def get_keys_total(json_object):
+    """Returns the number of keys in the json object provided"""
+    def count_keys(obj, count):
+        for value in obj.values():
+            if isinstance(value, dict):
+                return count_keys(value, count)
+            else:
+                count += 1
+        return count
+    return count_keys(json_object, 0);
 
 def save_file(data, language_code):
     file = get_file_path(translation_dir, language_code)
@@ -105,11 +108,9 @@ def translate(text, language_code):
         return translate_string(text, language_code)
 
 
-def translate_file(language_code, index, files_total):
+def translate_file(language_code, index, files_total, keys_total):
     existing_translation = get_file_json(language_code)
     final_translation = get_json_skeleton()
-
-    keys_total = get_keys_total(final_translation, 0)
 
     def translate_object(source, target):
         """
@@ -150,9 +151,11 @@ def translate_files_in_dir(dir):
     if from_language not in language_codes:
         exit_with_error(f"ERROR: Missing source language file: {from_language}.json")
 
+    keys_total = get_keys_total(get_json_skeleton())
+
     for index, language_code in enumerate(language_codes):
         if language_code != from_language:
-            translation = translate_file(language_code, index, languages_total)
+            translation = translate_file(language_code, index, languages_total, keys_total)
             save_file(translation, language_code)
     print("Translation complete!")
 
