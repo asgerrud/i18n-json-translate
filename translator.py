@@ -135,7 +135,7 @@ def translate_file(language_code, index, files_total, keys_total):
                     loading_bar.next()
 
     file_name = get_file_name(language_code)
-    with Bar(f"({index}/{files_total}) {file_name}", suffix='%(percent)d%%', max=keys_total) as loading_bar:
+    with Bar(f"({index}/{files_total}) {file_name}", suffix='%(percent)d%% (%(eta)ds)', max=keys_total) as loading_bar:
         translate_object(existing_translation, final_translation)
 
     translated_json = json.dumps(final_translation, indent=4, ensure_ascii=False)
