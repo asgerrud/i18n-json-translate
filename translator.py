@@ -46,14 +46,11 @@ def get_json_skeleton():
 
 def get_keys_total(json_object):
     """Returns the number of keys in the json object provided"""
-    def count_keys(obj, count):
-        for value in obj.values():
-            if isinstance(value, dict):
-                return count_keys(value, count)
-            else:
-                count += 1
-        return count
-    return count_keys(json_object, 0);
+
+    def count_keys(d):
+        return sum([count_keys(v) if isinstance(v, dict) else 1 for v in d.values()])
+
+    return count_keys(json_object);
 
 def save_file(data, language_code):
     file = get_file_path(translation_dir, language_code)
